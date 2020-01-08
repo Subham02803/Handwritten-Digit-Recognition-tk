@@ -1,27 +1,60 @@
 import tkinter as tk
-import win32gui
-from PIL import ImageGrab, Image
+from tkinter import *
+from PIL import ImageDraw, Image
 import numpy as np
-#import tensorflow as tf
-#from tensorflow.keras.models import load_model
+import matplotlib.pyplot as plt
+import tensorflow as tf
+from tensorflow.keras.models import load_model
 
-#model = load_model('model.h5')
+model = load_model('model.h5')
+
+def predict_digit(img):
+    #resize image to 28x28 pixels
+    img = img.resize((28,28))
+    #convert rgb to grayscale
+    img = img.convert('L')
+    img = np.array(img)
+    #reshaping to support our model input and normalizing
+    img = img.reshape(1,28,28,1)
+    img = img/255.0
+    #predicting the class
+    res = model.predict([img])[0]
+    return np.argmax(res), max(res)
 
 root = tk.Tk()
-canvas = tk.Canvas(root, height=500, width=800, bg="#921ef7")
-canvas.pack()
+root.title("Handwritten Digit Recognition")
+canvas = tk.Canvas(root, height=500, width=400, bg="#ffffff")
+canvas.pack(side='left')
 
-label1 = tk.Label(root, text="Draw a number", font=("Helvetica", 28))
-label1.place(relx=0.02, rely=0.04, relwidth=0.5, relheight=0.9)
+control = tk.Canvas(root, height=500, width=400, bg="#921ef7")
+control.pack(side='left')
 
-label2 = tk.Label(root, text="Thinking..", font=("Helvetica", 28))
-label2.place(relx=0.54, rely=0.44, relwidth=0.43, relheight=0.5)
+def paint(event):
+    x = event.x
+    y = event.y
+    r=7
+    canvas.create_oval(x-r, y-r, x + r, y + r, fill='black')
 
-but_clr = tk.Button(root, text="Clear", font=("Helvetica", 18))
-but_clr.place(relx=0.54, rely=0.08, relwidth=0.17, relheight=0.07)
+image1 = Image.new('RGB', (400, 500), 'white')
+draw = ImageDraw.Draw(image1)
+canvas.bind('<B1-Motion>', paint)
+#canvas.pack(expand=YES, fill=BOTH)
 
-but_rec = tk.Button(root, text="Recognise", font=("Helvetica", 18))
-but_rec.place(relx=0.54, rely=0.17, relwidth=0.17, relheight=0.07)
+def get_image():
+    digit, acc = predict_digit(image1)
+    label.configure(text= str(digit)+', '+ str(int(acc*100))+'%')
 
+def clear_all():
+    canvas.delete("all")
+    label.configure(text = "")
+
+label = tk.Label(control, text="", font=("Helvetica", 48))
+label.place(relx = 0.1, rely = 0.3, relwidth = 0.8, relheight = 0.5)
+
+classify_btn = tk.Button(control, text = "Recognise", command = lambda: get_image())
+classify_btn.place(relx = 0.04, rely = 0.1, relwidth = 0.2, relheight = 0.1)
+
+clear_btn = tk.Button(control, text= "Clear", command = lambda: clear_all())
+clear_btn.place(relx = 0.34, rely = 0.1, relwidth = 0.2, relheight = 0.1)
 
 root.mainloop()
