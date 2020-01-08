@@ -1,8 +1,15 @@
-import numpy as np
 import tkinter as tk
-from tkinter import *
+import win32gui
+from PIL import ImageGrab, Image
+import numpy as np
 import tensorflow as tf
-from tensorflow import keras
+from tensorflow.keras.models import load_model
 
-model = keras.model.load_model("mnist.h5")
+model = load_model('model.h5')
 
+
+root = tk.Tk()
+canvas = tk.Canvas(root, height=500, width=800, bg="#e6e6ff")
+canvas.pack()
+
+root.mainloop()
